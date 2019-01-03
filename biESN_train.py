@@ -83,6 +83,8 @@ if __name__ == "__main__":
         W_fw *= 1.25 / rhoW_fw
         W_bw *= 1.25 / rhoW_bw
 
+    all_train_error = []
+
     # RLS training
     print 'Calculating reservoir states...'
     RLS_delta = 0.000001
@@ -110,43 +112,34 @@ if __name__ == "__main__":
                 x_bw = (1 - a) * x_bw + a * tanh(dot(Win_bw, u_bw) + dot(W_bw, x_bw))
                 fw_states.append(x_fw)
                 bw_states.append(x_bw)
-        intermediate_data.append((inputs, fw_states, flip(bw_states, 0), Ytr))
+        text = (inputs, fw_states, flip(bw_states, 0), Ytr)
+
+        print 'training on text ' + str(i + 1) + '/' + str(len(train_data)) + '...'
+        trainLen = len(text[0])
+        curr_train_error = zeros((trainLen))
+        Ytr = text[3]
+        e = zeros((outSize, 1))
+        for t in range(trainLen):
+            u = text[0][t]
+            if use_reservoirs == "True":
+                x_fw = text[1][t]
+                if bidirectional == "True":
+                    x_bw = text[2][t]
+                    state = vstack((u, x_fw, x_bw))
+                else:
+                    state = vstack((u, x_fw))
+            else:
+                state = u
+            y = dot(Wout, state)
+            phi = dot(state.T, SInverse)
+            k = phi.T / (RLS_lambda + dot(phi, state))
+            e = reshape(Ytr[t], (outSize, 1)) - y
+            curr_train_error[t] = sqrt(sum(dot(e, e.T))) / (len(e))
+            Wout += k.T * e
+            SInverse = (SInverse - dot(k, phi)) / RLS_lambda
+        all_train_error.append(curr_train_error)
 
     print "...done."
-
-    # f = open(os.path.join(save_path, 'trained_ESN3_' + name_add + '.cpickle'), "wb")
-    # cPickle.dump(intermediate_data, f, protocol=2)
-    # f.close()
-
-    print "Training..."
-    all_train_error = []
-    for iter in range(training_iterations):
-        for i, text in enumerate(intermediate_data):
-            print 'training on text ' + str(i+1) + '/' + str(len(train_data)) + '...'
-            trainLen = len(text[0])
-            curr_train_error = zeros((trainLen))
-            Ytr = text[3]
-            e = zeros((outSize, 1))
-            for t in range(trainLen):
-                u = text[0][t]
-                if use_reservoirs == "True":
-                    x_fw = text[1][t]
-                    if bidirectional == "True":
-                        x_bw = text[2][t]
-                        state = vstack((u, x_fw, x_bw))
-                    else:
-                        state = vstack((u, x_fw))
-                else:
-                    state = u
-                y = dot(Wout, state)
-                phi = dot(state.T, SInverse)
-                k = phi.T / (RLS_lambda + dot(phi, state))
-                e = reshape(Ytr[t], (outSize, 1)) - y
-                curr_train_error[t] = sqrt(sum(dot(e, e.T))) / (len(e))
-                Wout += k.T * e
-                SInverse = (SInverse - dot(k, phi)) / RLS_lambda
-            all_train_error.append(curr_train_error)
-    print '...done.'
 
     print 'Saving...'
     with open(os.path.join(save_path, 'trained_ESN3_' + name_add + '_parameters.txt'), 'w') as params:
