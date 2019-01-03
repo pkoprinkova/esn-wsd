@@ -62,6 +62,10 @@ if __name__ == "__main__":
             Win_bw = cPickle.load(input_file)
             W_fw = cPickle.load(input_file)
             W_bw = cPickle.load(input_file)
+            G_fw = cPickle.load(input_file)
+            G_bw = cPickle.load(input_file)
+            B_fw = cPickle.load(input_file)
+            B_bw = cPickle.load(input_file)
 
 
     # test the trained ESN
@@ -88,8 +92,8 @@ if __name__ == "__main__":
             inputs.append(u_fw)
             if use_reservoirs == "True":
                 u_bw = reshape(asarray(Xts[testLen-1-t]), (inSize, 1))
-                x_fw = (1 - a) * x_fw + a * tanh(dot(Win_fw, u_fw) + dot(W_fw, x_fw))
-                x_bw = (1 - a) * x_bw + a * tanh(dot(Win_bw, u_bw) + dot(W_bw, x_bw))
+                x_fw = (1 - a) * x_fw + a * tanh(dot(diag(G_fw)*Win_fw, u_fw) + dot(diag(G_fw)*W_fw, x_fw)+B_fw)
+                x_bw = (1 - a) * x_bw + a * tanh(dot(diag(G_bw)*Win_bw, u_bw) + dot(diag(G_bw)*W_bw, x_bw)+B_bw)
                 fw_states.append(x_fw)
                 bw_states.append(x_bw)
         features = zip(inputs, fw_states, flip(bw_states, 0))
