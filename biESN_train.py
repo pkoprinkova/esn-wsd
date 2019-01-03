@@ -64,6 +64,10 @@ if __name__ == "__main__":
     if use_reservoirs == "True":
         Win_fw = (random.rand(res_size, inSize) - 0.5) * 1
         Win_bw = (random.rand(res_size, inSize) - 0.5) * 1
+        G_fw = ones((res_size, 1))
+        G_bw = ones((res_size, 1))
+        B_fw = zeros((res_size, 1))
+        B_bw = zeros((res_size, 1))
         Wini = scipy.sparse.rand(res_size, res_size, density=res_sparsity)
         i, j, v = scipy.sparse.find(Wini)
         # W = Wini.toarray()
