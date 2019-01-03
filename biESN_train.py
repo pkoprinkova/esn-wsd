@@ -110,8 +110,8 @@ if __name__ == "__main__":
             inputs.append(u_fw)
             if use_reservoirs == "True":
                 u_bw = reshape(asarray(Xtr[trainLen-1-t]), (inSize, 1))
-                x_fw = (1 - a) * x_fw + a * tanh(dot(Win_fw, u_fw) + dot(W_fw, x_fw))
-                x_bw = (1 - a) * x_bw + a * tanh(dot(Win_bw, u_bw) + dot(W_bw, x_bw))
+                x_fw = (1 - a) * x_fw + a * tanh(dot(diag(G_fw)*Win_fw, u_fw) + dot(diag(G_fw)*W_fw, x_fw)+B_fw)
+                x_bw = (1 - a) * x_bw + a * tanh(dot(diag(G_bw)*Win_bw, u_bw) + dot(diag(G_bw)*W_bw, x_bw)+B_bw)
                 fw_states.append(x_fw)
                 bw_states.append(x_bw)
         intermediate_data.append((inputs, fw_states, flip(bw_states, 0), Ytr))
@@ -165,6 +165,10 @@ if __name__ == "__main__":
         cPickle.dump(Win_bw, f, protocol=2)
         cPickle.dump(W_fw, f, protocol=2)
         cPickle.dump(W_bw, f, protocol=2)
+        cPickle.dump(G_fw, f, protocol=2)
+        cPickle.dump(G_bw, f, protocol=2)
+        cPickle.dump(B_fw, f, protocol=2)
+        cPickle.dump(B_bw, f, protocol=2)
     f.close()
 
     # plot(train_error)
