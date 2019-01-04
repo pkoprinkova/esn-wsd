@@ -41,14 +41,7 @@ if __name__ == "__main__":
     window_size = int(args.window_size)
     use_reservoirs = args.use_reservoirs
     bidirectional = args.bidirectional
-    if use_reservoirs == "True":
-        res_size = int(args.res_size)
-    else:
-        res_size = 0
-    if bidirectional == "True":
-        total_res_size = res_size * 2
-    else:
-        total_res_size = res_size
+    res_size = int(args.res_size)
     a = float(args.leak_rate)  # leaking rate
     res_sparsity = float(args.res_sparsity)
     learning_rate = float(args.learning_rate)
