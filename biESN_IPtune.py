@@ -72,10 +72,10 @@ if __name__ == "__main__":
     if use_reservoirs == "True":
         Win_fw = (random.rand(res_size, inSize) - 0.5) * 1
         Win_bw = (random.rand(res_size, inSize) - 0.5) * 1
-	   G_fw = ones((res_size, 1))
-	   G_bw = ones((res_size, 1))
-	   B_fw = zeros((res_size, 1))
-	   B_bw = zeros((res_size, 1))
+	G_fw = ones((res_size, 1))
+	G_bw = ones((res_size, 1))
+	B_fw = zeros((res_size, 1))
+	B_bw = zeros((res_size, 1))
         Wini = scipy.sparse.rand(res_size, res_size, density=res_sparsity)
         i, j, v = scipy.sparse.find(Wini)
         # W = Wini.toarray()
@@ -106,28 +106,28 @@ if __name__ == "__main__":
             u_bw = zeros((inSize, 1))
             x_fw = zeros((res_size, 1))
             x_bw = zeros((res_size, 1))
-		 net_fw = zeros((res_size, 1))
+	    net_fw = zeros((res_size, 1))
             net_bw = zeros((res_size, 1))
-      	 dG_fw = zeros((res_size, 1))
+      	    dG_fw = zeros((res_size, 1))
             dG_bw = zeros((res_size, 1))
-		 dB_fw = zeros((res_size, 1))
+	    dB_fw = zeros((res_size, 1))
             dB_bw = zeros((res_size, 1))                                                
         for t in range(trainLen):
             u_fw = reshape(asarray(Xtr[t]), (inSize, 1))
             if use_reservoirs == "True":
                 u_bw = reshape(asarray(Xtr[trainLen-1-t]), (inSize, 1))
                 net_fw = dot(Win_fw, u_fw) + dot(W_fw, x_fw)
-			net_bw = dot(Win_bw, u_bw) + dot(W_bw, x_bw)
-			x_fw = (1 - a) * x_fw + a * tanh(diag(G_fw)*net_fw + B_fw)
-			x_bw = (1 - a) * x_bw + a * tanh(diag(G_bw)*net_bw + B_bw)
-			dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_fw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_fw**2+Gaus_mean*x_fw))
-			dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_bw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_bw**2+Gaus_mean*x_bw))
-			dG_fw=learning_rate/G_fw+dG_fw*net_fw
-			dG_bw=learning_rate/G_bw+dG_bw*net_bw
-			G_fw+=dG_fw
-			G_bw+=dG_bw
-			B_fw+=dB_fw
-			B_bw+=dB_bw		             
+		net_bw = dot(Win_bw, u_bw) + dot(W_bw, x_bw)
+		x_fw = (1 - a) * x_fw + a * tanh(diag(G_fw)*net_fw + B_fw)
+		x_bw = (1 - a) * x_bw + a * tanh(diag(G_bw)*net_bw + B_bw)
+		dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_fw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_fw**2+Gaus_mean*x_fw))
+		dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_bw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_bw**2+Gaus_mean*x_bw))
+		dG_fw=learning_rate/G_fw+dG_fw*net_fw
+		dG_bw=learning_rate/G_bw+dG_bw*net_bw
+		G_fw+=dG_fw
+		G_bw+=dG_bw
+		B_fw+=dB_fw
+		B_bw+=dB_bw		             
 
     print "...done."
 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         cPickle.dump(Win_bw, f, protocol=2)
         cPickle.dump(W_fw, f, protocol=2)
         cPickle.dump(W_bw, f, protocol=2)
-	   cPickle.dump(G_fw, f, protocol=2)
+	cPickle.dump(G_fw, f, protocol=2)
         cPickle.dump(G_bw, f, protocol=2)
         cPickle.dump(B_fw, f, protocol=2)
 cPickle.dump(B_bw, f, protocol=2)
