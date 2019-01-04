@@ -54,7 +54,7 @@ if __name__ == "__main__":
     learning_rate = float(args.learning_rate)
     Gaus_mean = float(args.Gaus_mean)
     Gaus_sigma = float(args.Gaus_sigma)
-    IP_iterations = float(args.IP_iterations)
+    IP_iterations = int(args.IP_iterations)
     only_open_class = args.only_open_class
     training_iterations = int(args.training_iterations)
     save_path = args.save_path
@@ -65,35 +65,34 @@ if __name__ == "__main__":
 
     inSize = embeddings_size * window_size
     outSize = embeddings_size
-    # generate the ESN reservoir
+    # generate the ESN reservoirs
     name_add = str(res_size) + '_' + str(res_sparsity) + '_' + str(a)
     random.seed(42)
     Wout = (random.rand(outSize, total_res_size + inSize) - 0.5) * 1.0
-    if use_reservoirs == "True":
-        Win_fw = (random.rand(res_size, inSize) - 0.5) * 1
-        Win_bw = (random.rand(res_size, inSize) - 0.5) * 1
-	G_fw = ones((res_size, 1))
-	G_bw = ones((res_size, 1))
-	B_fw = zeros((res_size, 1))
-	B_bw = zeros((res_size, 1))
-        Wini = scipy.sparse.rand(res_size, res_size, density=res_sparsity)
-        i, j, v = scipy.sparse.find(Wini)
-        # W = Wini.toarray()
-        W_fw = Wini.toarray()
-        W_bw = Wini.toarray()
-        # W[i, j] -= 0.5
-        W_fw[i, j] -= 0.5
-        W_bw[i, j] -= 0.5
+    Win_fw = (random.rand(res_size, inSize) - 0.5) * 1
+    Win_bw = (random.rand(res_size, inSize) - 0.5) * 1
+    G_fw = ones((res_size, 1))
+    G_bw = ones((res_size, 1))
+    B_fw = zeros((res_size, 1))
+    B_bw = zeros((res_size, 1))
+    Wini = scipy.sparse.rand(res_size, res_size, density=res_sparsity)
+    i, j, v = scipy.sparse.find(Wini)
+    # W = Wini.toarray()
+    W_fw = Wini.toarray()
+    W_bw = Wini.toarray()
+    # W[i, j] -= 0.5
+    W_fw[i, j] -= 0.5
+    W_bw[i, j] -= 0.5
 
-        # normalizing and setting spectral radius
-        print 'Computing spectral radius...'
-        # rhoW = max(abs(linalg.eig(W)[0]))
-        rhoW_fw = max(abs(linalg.eig(W_fw)[0]))
-        rhoW_bw = max(abs(linalg.eig(W_bw)[0]))
-        print 'done.'
-        # W *= 1.25 / rhoW
-        W_fw *= 1.25 / rhoW_fw
-        W_bw *= 1.25 / rhoW_bw
+    # normalizing and setting spectral radius
+    print 'Computing spectral radius...'
+    # rhoW = max(abs(linalg.eig(W)[0]))
+    rhoW_fw = max(abs(linalg.eig(W_fw)[0]))
+    rhoW_bw = max(abs(linalg.eig(W_bw)[0]))
+    print 'done.'
+    # W *= 1.25 / rhoW
+    W_fw *= 1.25 / rhoW_fw
+    W_bw *= 1.25 / rhoW_bw
 
     # IP tuning
     print 'IP tunning of reservoirs...'    
@@ -102,33 +101,33 @@ if __name__ == "__main__":
         Xtr, Ytr,_, _, _ = format_data(train_data[i], embeddings, embeddings_size, window_size)
         trainLen = len(Xtr)
         u_fw = zeros((inSize, 1))
-        if use_reservoirs == "True":
-            u_bw = zeros((inSize, 1))
-            x_fw = zeros((res_size, 1))
-            x_bw = zeros((res_size, 1))
-	    net_fw = zeros((res_size, 1))
-            net_bw = zeros((res_size, 1))
-      	    dG_fw = zeros((res_size, 1))
-            dG_bw = zeros((res_size, 1))
-	    dB_fw = zeros((res_size, 1))
-            dB_bw = zeros((res_size, 1))                                                
-        for t in range(trainLen):
-            u_fw = reshape(asarray(Xtr[t]), (inSize, 1))
-            if use_reservoirs == "True":
-                u_bw = reshape(asarray(Xtr[trainLen-1-t]), (inSize, 1))
-                net_fw = dot(Win_fw, u_fw) + dot(W_fw, x_fw)
-		net_bw = dot(Win_bw, u_bw) + dot(W_bw, x_bw)
-		x_fw = (1 - a) * x_fw + a * tanh(diag(G_fw)*net_fw + B_fw)
-		x_bw = (1 - a) * x_bw + a * tanh(diag(G_bw)*net_bw + B_bw)
-		dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_fw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_fw**2+Gaus_mean*x_fw))
-		dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_bw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_bw**2+Gaus_mean*x_bw))
-		dG_fw=learning_rate/G_fw+dG_fw*net_fw
-		dG_bw=learning_rate/G_bw+dG_bw*net_bw
-		G_fw+=dG_fw
-		G_bw+=dG_bw
-		B_fw+=dB_fw
-		B_bw+=dB_bw		             
-
+        u_bw = zeros((inSize, 1))
+	x_fw = zeros((res_size, 1))
+	x_bw = zeros((res_size, 1))
+	net_fw = zeros((res_size, 1))
+	net_bw = zeros((res_size, 1))
+	dG_fw = zeros((res_size, 1))
+	dG_bw = zeros((res_size, 1))
+	dB_fw = zeros((res_size, 1))
+	dB_bw = zeros((res_size, 1))
+	
+	for iter in range(IP_iterations):
+		for t in range(trainLen):
+			u_fw = reshape(asarray(Xtr[t]), (inSize, 1))
+			u_bw = reshape(asarray(Xtr[trainLen-1-t]), (inSize, 1))
+			net_fw = dot(Win_fw, u_fw) + dot(W_fw, x_fw)
+			net_bw = dot(Win_bw, u_bw) + dot(W_bw, x_bw)
+			x_fw = (1 - a) * x_fw + a * tanh(diag(G_fw)*net_fw + B_fw)
+			x_bw = (1 - a) * x_bw + a * tanh(diag(G_bw)*net_bw + B_bw)
+			dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_fw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_fw**2+Gaus_mean*x_fw))
+			dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_bw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_bw**2+Gaus_mean*x_bw))
+			dG_fw=learning_rate/G_fw+dG_fw*net_fw
+			dG_bw=learning_rate/G_bw+dG_bw*net_bw
+			G_fw+=dG_fw
+			G_bw+=dG_bw
+			B_fw+=dB_fw
+			B_bw+=dB_bw		             
+				
     print "...done."
 
     # f = open(os.path.join(save_path, 'trained_ESN3_' + name_add + '.cpickle'), "wb")
@@ -136,20 +135,15 @@ if __name__ == "__main__":
     # f.close()
 
     print 'Saving...'
-    with open(os.path.join(save_path, 'trained_ESN3_' + name_add + '_parameters.txt'), 'w') as params:
+    with open(os.path.join(save_path, 'IPtrained_ESN_' + name_add + '_parameters.txt'), 'w') as params:
         params.write(str(args) + '\n\n')
-    f = open(os.path.join(save_path, 'trained_ESN3_' + name_add + '.cpickle'), "wb")
-    cPickle.dump(all_train_error, f, protocol=2)
-    cPickle.dump(res_sparsity, f, protocol=2)
-    cPickle.dump(a, f, protocol=2)
-    cPickle.dump(Wout, f, protocol=2)
-    if use_reservoirs == "True":
-        cPickle.dump(Win_fw, f, protocol=2)
-        cPickle.dump(Win_bw, f, protocol=2)
-        cPickle.dump(W_fw, f, protocol=2)
-        cPickle.dump(W_bw, f, protocol=2)
-	cPickle.dump(G_fw, f, protocol=2)
-        cPickle.dump(G_bw, f, protocol=2)
-        cPickle.dump(B_fw, f, protocol=2)
-cPickle.dump(B_bw, f, protocol=2)
+    f = open(os.path.join(save_path, 'IPtrained_ESN_' + name_add + '.cpickle'), "wb")
+    cPickle.dump(Win_fw, f, protocol=2)
+    cPickle.dump(Win_bw, f, protocol=2)
+    cPickle.dump(W_fw, f, protocol=2)
+    cPickle.dump(W_bw, f, protocol=2)
+    cPickle.dump(G_fw, f, protocol=2)
+    cPickle.dump(G_bw, f, protocol=2)
+    cPickle.dump(B_fw, f, protocol=2)
+    cPickle.dump(B_bw, f, protocol=2)
     f.close()
