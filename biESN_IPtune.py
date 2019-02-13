@@ -112,10 +112,10 @@ if __name__ == "__main__":
 			net_bw = dot(Win_bw, u_bw) + dot(W_bw, x_bw)
 			x_fw = (1 - a) * x_fw + a * tanh(diag(G_fw)*net_fw + B_fw)
 			x_bw = (1 - a) * x_bw + a * tanh(diag(G_bw)*net_bw + B_bw)
-			dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_fw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_fw**2+Gaus_mean*x_fw))
-			dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(x_bw/(Gaus_sigma**2))*(2.0*(Gaus_sigma**2)+1.0-x_bw**2+Gaus_mean*x_bw))
-			dG_fw=learning_rate/G_fw+dG_fw*net_fw
-			dG_bw=learning_rate/G_bw+dG_bw*net_bw
+			dB_fw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(1/(Gaus_sigma**2))*dot(x_fw, (2.0*(Gaus_sigma**2)+1.0-dot(x_fw, x_fw)+Gaus_mean*x_fw)))
+			dB_bw=-learning_rate*(-Gaus_mean/(Gaus_sigma**2)+(1/(Gaus_sigma**2))*dot(x_bw, (2.0*(Gaus_sigma**2)+1.0-dot(x_bw, x_bw)+Gaus_mean*x_bw)))
+			dG_fw=learning_rate/G_fw+dot(dB_fw, net_fw)
+			dG_bw=learning_rate/G_bw+dot(dB_bw, net_bw)
 			G_fw+=dG_fw
 			G_bw+=dG_bw
 			B_fw+=dB_fw
